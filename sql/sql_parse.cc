@@ -7474,6 +7474,7 @@ void THD::reset_for_next_command(bool do_clear_error)
   binlog_unsafe_warning_flags= 0;
 
   save_prep_leaf_list= false;
+  m_sp_cache_version= 0;
 
 #if defined(WITH_WSREP) && !defined(DBUG_OFF)
   if (mysql_bin_log.is_open())
@@ -8907,8 +8908,8 @@ push_new_name_resolution_context(THD *thd,
 
 
 /**
-  Fix condition which contains only field (f turns to  f <> 0 )
-    or only contains the function NOT field (not f turns to  f == 0)
+  Fix condition which contains only field (f turns to  f IS TRUE )
+  or only contains the function NOT field (not f turns to  f IS FALSE)
 
   @param cond            The condition to fix
 
@@ -8922,7 +8923,8 @@ Item *normalize_cond(THD *thd, Item *cond)
     Item::Type type= cond->type();
     if (type == Item::FIELD_ITEM || type == Item::REF_ITEM)
     {
-      item_base_t is_cond_flag= cond->base_flags & item_base_t::IS_COND;
+      item_base_t is_cond_flag= cond->base_flags &
+        (item_base_t::IS_COND | item_base_t::AT_TOP_LEVEL);
       cond->base_flags&= ~item_base_t::IS_COND;
       cond= new (thd->mem_root) Item_func_istrue(thd, cond);
       if (cond)
