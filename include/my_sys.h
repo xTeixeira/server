@@ -992,6 +992,7 @@ extern int unpackfrm(uchar **, size_t *, const uchar *);
 
 extern uint32 my_checksum(uint32, const void *, size_t);
 extern uint32 my_crc32c(uint32, const void *, size_t);
+extern uint32 XXH32(const void*, size_t, uint32);
 
 extern const char *my_crc32c_implementation();
 

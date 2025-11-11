@@ -282,6 +282,7 @@ public:
       KEY_ALGORITHM_55= 2,
       KEY_ALGORITHM_SIMPLE,
       KEY_ALGORITHM_CRC32,
+      KEY_ALGORITHM_XX,
       KEY_ALGORITHM_END
     };
   enum_key_algorithm key_algorithm;

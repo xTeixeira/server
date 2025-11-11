@@ -63,6 +63,7 @@
 
 #include "debug_sync.h"
 #include <functional>
+#include "../mysys/xxhash/xxhash.h"
 
 /* First 4 bytes in the .par file is the number of 32-bit words in the file */
 #define PAR_WORD_SIZE 4
@@ -10257,11 +10258,16 @@ static uint32 crc32_hash(Field **field_array)
   Field *field;
   uint32 result= 0;
   while ((field= *field_array++))
-  {
-    uint len= field->pack_length();
-    uchar *key= field->ptr;
-    result= my_crc32c(result, key, len);
-  }
+    result= my_crc32c(result, field->ptr, field->pack_length());
+  return result;
+}
+
+static uint32 xx_hash(Field **field_array)
+{
+  Field *field;
+  uint32 result= 0;
+  while ((field= *field_array++))
+    result= XXH32(field->ptr, field->pack_length(), result);
   return result;
 }
 
@@ -10286,6 +10292,9 @@ uint32 ha_partition::calculate_key_hash_value(Field **field_array)
   if ((*field_array)->table->part_info->key_algorithm ==
       partition_info::KEY_ALGORITHM_CRC32)
     return crc32_hash(field_array);
+  if ((*field_array)->table->part_info->key_algorithm ==
+      partition_info::KEY_ALGORITHM_XX)
+    return xx_hash(field_array);
   use_51_hash= MY_TEST((*field_array)->table->part_info->key_algorithm ==
                        partition_info::KEY_ALGORITHM_51);
 
